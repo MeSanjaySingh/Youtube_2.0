@@ -1,13 +1,61 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 // import Youtube_Logo from "../../assets/Youtube.png";
 import { ArrowLeft, Bell, Menu, Mic, Search, Upload, User } from "lucide-react";
 import { Button } from "../Buttons";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { toggleNav } from "../utils/appSlice";
-
+import { YOUTUBE_SEARCH_API } from "../utils/constants";
+import { cacheResults } from "../utils/searchSlice";
 
 const Header = () => {
+  const [searchQuery, setSearchQuery] = useState("");
+  // console.log(searchQuery);
+
+  const [suggestions, setSuggestions] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+
+  const searchCache = useSelector((store) => store.search);
+
+  /** CACHE::
+   * {
+   *   "iphone":["iphone 11","iphone 15"]
+   * }
+   */
+
+  useEffect(() => {
+    // API CALL ==>
+    // Make an api call after every key press
+    // but if the diference between 2 API class is < 200ms
+    // decline the API call
+    // console.log(searchQuery);
+    const timer = setTimeout(() => {
+      if (searchCache[searchQuery]) {
+        setSuggestions(searchCache[searchQuery]);
+      } else {
+        getSearchSuggestions();
+      }
+    }, 200);
+    // clear the timeout
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [searchQuery]);
+
+  const getSearchSuggestions = async () => {
+    console.log("API Call made :: " + searchQuery);
+    const data = await fetch(YOUTUBE_SEARCH_API + searchQuery);
+    const json = await data.json();
+    // console.log(json[1]);
+    setSuggestions(json[1]);
+
+    // Update Cahce ::
+    dispatch(
+      cacheResults({
+        [searchQuery]: json[1],
+      })
+    );
+  };
   const dispatch = useDispatch();
   const toggleNavHandler = () => {
     dispatch(toggleNav());
@@ -54,16 +102,39 @@ const Header = () => {
             <ArrowLeft />
           </Button>
         )}
-        <div className="flex flex-grow max-w-[600px]">
+        <div className="flex relative flex-grow max-w-[600px]">
           <input
-            type="search"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onFocus={() => {
+              setShowSuggestions(true);
+            }}
+            onBlur={() => {
+              setShowSuggestions(false);
+            }}
+            type="text"
             placeholder="Search"
             className="rounded-l-full border border-secondary-border shadow-inner shadow-secondary py-1 px-4 text-lg w-full focus:border-blue-500 outline-none"
           ></input>
           <Button className="py-2 px-4 rounded-r-full border border-secondary-border border-l-0 flex-shrink-0">
             <Search />
           </Button>
+          {showSuggestions && (
+            <div className="md:w-[520px] w-[200px] rounded-md shadow-md left-2 shadow-blue-300 md:left-5 absolute top-11 z-50  bg-white ">
+              <ul className="flex flex-col  ">
+                {suggestions.map((suggestion) => (
+                  <li
+                    key={suggestion}
+                    className="flex items-center px-3 py-1 gap-1  hover:bg-gray-200 "
+                  >
+                    <Search size={15} /> {suggestion}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
+
         <Button type="button" size="icon" className="flex-shrink-0">
           <Mic />
         </Button>

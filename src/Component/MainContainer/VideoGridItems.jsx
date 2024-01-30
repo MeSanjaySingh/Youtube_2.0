@@ -6,14 +6,14 @@ const VIEW_FORMATTER = new Intl.NumberFormat(undefined, {
 
 const VideoGridItems = ({ info }) => {
   // console.log(info);
-  // const { snippet, statistics } = info?.info;
-  // const { channleTitle, title, thumbnails } = info?.snippet;
+  const { snippet, statistics, viewCount } = info;
+  const { channelTitle, title, thumbnails } = snippet;
   return (
     <div className="flex flex-col gap-2">
       <a className="relative aspect-video">
         <img
           alt="thumbnail"
-          src={info?.snippet?.thumbnails.medium.url}
+          src={thumbnails.medium.url}
           className="block w-full h-full object-cover rounded-xl transition-timing-function:cubic-bezier(0.4, 0, 0.2, 1); duration-150 hover:rounded-none hover:shadow-lg cursor-pointer"
         ></img>
       </a>
@@ -26,16 +26,11 @@ const VideoGridItems = ({ info }) => {
           ></img>
         </a>
         <div className="flex flex-col">
-          <h3 className="font-bold">{info?.snippet?.title}</h3>
+          <h3 className="font-bold">{title}</h3>
 
           <div className="text-gray-500 text-sm flex gap-5">
-            <h3 className="text-gray-500 text-sm">
-              {info?.snippet?.channelTitle}
-            </h3>
-            •
-            <h3>
-              {VIEW_FORMATTER.format(`${info?.statistics?.viewCount}`)} Views
-            </h3>
+            <h3 className="text-gray-500 text-sm">{channelTitle}</h3>•
+            <h3>{VIEW_FORMATTER.format(`${statistics?.viewCount}`)} Views</h3>
           </div>
         </div>
       </div>
@@ -43,10 +38,15 @@ const VideoGridItems = ({ info }) => {
   );
 };
 
-export default VideoGridItems;
+export const AdVideoCard = ({ info }) => {
+  return (
+    <div className="p-1 m-1 relative scale-100  border-gray-500 border-2 rounded-md">
+      <h5 className="font-bold right-2 stroke-1 stroke-cyan-500 absolute z-10 font-mono text-white">
+        Youtube Ad
+      </h5>
+      <VideoGridItems info={info} />
+    </div>
+  );
+};
 
-{
-  /* <li>{info?.snippet?.title}</li>
-          <li>{info?.snippet?.channleTitle}</li>
-          <li>{info?.statistics?.viewCount}</li> */
-}
+export default VideoGridItems;
